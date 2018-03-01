@@ -5,8 +5,8 @@ public abstract interface CanConstants
   public static final String Parameter_PrescalerCte = "Prescaler";
   public static final String Parameter_TimeQuantumCte = "CalculateTimeQuantum";
   public static final String Parameter_TimeBitCte = "CalculateTimeBit";
-  public static final String Parameter_BitSegment1Cte = "BS1";
-  public static final String Parameter_BitSegment2Cte = "BS2";
+  public static final String Parameter_BitSegment1Cte = "TimeSeg1";
+  public static final String Parameter_BitSegment2Cte = "TimeSeg2";
   public static final String Parameter_FilterId32bCte = "FilterId32b";
   public static final String Parameter_FilterIdHighCte = "FilterIdHigh";
   public static final String Parameter_FilterIdLowCte = "FilterIdLow";

@@ -56,8 +56,8 @@
 /*     */         case "Prescaler":
 /*  87 */           clUpdateParamList = this.m_clCanManager.verifyValuePrescaler(this, clSourceParameter, false);
 /*  88 */           break;
-/*     */         case "BS1":
-/*     */         case "BS2":
+/*     */         case "TimeSeg1":
+/*     */         case "TimeSeg2":
 /*  94 */           clUpdateParamList = this.m_clCanManager.verifyValueBitSegment(this, clSourceParameter);
 /*  95 */           break;
 /*     */         case "FilterId32b":

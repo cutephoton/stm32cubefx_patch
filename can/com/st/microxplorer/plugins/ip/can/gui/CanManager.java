@@ -44,7 +44,7 @@
 /*     */ 
 /*     */   public void clockChange()
 /*     */   {
-/*  68 */     List clUpdateParamList = null;
+/*  68 */     List<Parameter> clUpdateParamList = null;
 /*     */ 
 /*  70 */     Parameter clParameter = getParameter("Prescaler");
 /*  71 */     if (clParameter != null) {
@@ -101,10 +101,10 @@
 /*     */ 
 /* 378 */     clearParamInvalidList();
 /*     */ 
-/* 380 */     Parameter parameter_BitSegment1 = getParameter("BS1");
-/* 381 */     Parameter parameter_BitSegment2 = getParameter("BS2");
+/* 380 */     Parameter parameter_BitSegment1 = getParameter("TimeSeg1"); // Used to be BS1
+/* 381 */     Parameter parameter_BitSegment2 = getParameter("TimeSeg2"); // Used to be BS2
 /*     */ 
-/* 384 */     Parameter clParam = getParameter("BS1");
+/* 384 */     Parameter clParam = getParameter("TimeSeg1");
 /*     */ 
 /* 386 */     if (clParam != null)
 /* 387 */       iBitNbQuantum += decodeBitSegment(clParam.getCurrentValueComment2());
@@ -112,7 +112,7 @@
 /* 389 */       iBitNbQuantum++;
 /*     */     }
 /*     */ 
-/* 392 */     clParam = getParameter("BS2");
+/* 392 */     clParam = getParameter("TimeSeg2");
 /*     */ 
 /* 394 */     if (clParam != null)
 /* 395 */       iBitNbQuantum += decodeBitSegment(clParam.getCurrentValueComment2());
@@ -144,7 +144,6 @@
 /* 425 */       if (clParam != null)
 /*     */       {
 /*     */         String sValue;
-/*     */         String sValue;
 /* 427 */         if (!ParamRemoveCheck.getHasCheck().booleanValue()) {
 /* 428 */           sValue = iPrescalerNocheck + "*" + dIpClockTime;
 /*     */         }
@@ -166,7 +165,6 @@
 /* 446 */       if (clParam != null)
 /*     */       {
 /*     */         String sValue;
-/*     */         String sValue;
 /* 447 */         if (!ParamRemoveCheck.getHasCheck().booleanValue())
 /* 448 */           sValue = iPrescalerNocheck + "*" + dIpClockTime + "*" + iBitNbQuantum;
 /*     */         else {
@@ -183,8 +181,33 @@
 /*     */       }
 /*     */ 
 /*     */     }
-/*     */ 
-/* 465 */     if (iTimeBit < 1000)
+// ------------- Start Diagnostic Code -------------------------
+                System.out.println("HERE!");
+                System.out.println("iTimeBit " + iTimeBit);
+                System.out.println("BitSegment1 Value " + parameter_BitSegment1);
+                System.out.println("BitSegment2 Value " + parameter_BitSegment2);
+                System.out.println("Params:");
+                for ( Parameter i : this.m_clParameterManager.getIpParameters()) {
+                    System.out.println("----- " + i.getName() + " --> " + i.getCurrentValue());
+                }
+// ------------- End Diagnostic Code -------------------------
+/*     */
+    /*********************
+     * STM32L4 @ 80MHz will fail this test but generated code seems fine when set at lower frequencies.
+     * iTimeBit = 225 @ 500Kbps @ 80MHz Core/APBx Frequency........
+     *
+     * BUT! BUT! BUT!
+     *
+     * There seems to be a typo -- BS1/BS2 appears to refer to TimeSeg1/2. When TimeSegX is used instead of BS
+     * we get valid results. The reason CubeFX gets an exception instead of issuing an error to the user is because
+     * parameter_BitSegment1/2 are null. When using properly formed TimeSeg1/2 values the parameter no longer resolves
+     * to NULL. (However, a 'corrupt' ioc file may exclude these values, and consequently this code should proactively
+     * guard against that with a null check.)
+     *
+     * Further confirmed against mcu schema per CAN-STM32xxxx_Configs.xml files (which do not use BS1/2).
+     */
+/* 465 */     if (iTimeBit < 1000) //------ Original Code
+/* 465 */     //if (iTimeBit < 1) // Work around code (if BS1/2 aren't corrected.)
 /*     */     {
 /* 467 */       parameter_BitSegment1.setCurrentNonValidValueComment(parameter_BitSegment1.getCurrentValueComment());
 /* 468 */       parameter_BitSegment1.setValid(Boolean.valueOf(false));
@@ -229,17 +252,17 @@
 /* 521 */           String sBitSegmentName = clSourceParameter.getName();
 /*     */           int iLastNbBitQuantum;
 /*     */           int iBitSegment;
-/* 522 */           if (sBitSegmentName.equals("BS1") == true) {
-/* 523 */             clParameter = getParameter("BS2");
+/* 522 */           if (sBitSegmentName.equals("TimeSeg1") == true) {
+/* 523 */             clParameter = getParameter("TimeSeg2");
 /* 524 */             if (clParameter != null) {
 /* 525 */               iBitNbQuantum += decodeBitSegment(clParameter.getCurrentValueComment2());
 /*     */             }
-/* 527 */             int iLastNbBitQuantum = iBitNbQuantum;
+/* 527 */             iLastNbBitQuantum = iBitNbQuantum;
 /*     */ 
-/* 529 */             int iBitSegment = decodeBitSegment(clSourceParameter.getCurrentValueComment2());
+/* 529 */             iBitSegment = decodeBitSegment(clSourceParameter.getCurrentValueComment2());
 /* 530 */             iBitNbQuantum += iBitSegment;
 /*     */           } else {
-/* 532 */             clParameter = getParameter("BS1");
+/* 532 */             clParameter = getParameter("TimeSeg1");
 /* 533 */             if (clParameter != null) {
 /* 534 */               iBitNbQuantum += decodeBitSegment(clParameter.getCurrentValueComment2());
 /*     */             }
@@ -259,7 +282,7 @@
 /* 550 */             iBitNbQuantum = roundDouble(1000.0D / iTimeQuantum);
 /* 551 */             int iMinBitSegment = iBitNbQuantum - iLastNbBitQuantum;
 /* 552 */             sBitSegmentName = "BitSegment (" + sBitSegmentName + ")";
-/* 553 */             if (((((sBitSegmentName.equalsIgnoreCase("BitSegment (BS1)")) && (iMinBitSegment > 16)) | sBitSegmentName.equalsIgnoreCase("BitSegment (BS2)"))) && (iMinBitSegment > 8)) {
+/* 553 */             if (((((sBitSegmentName.equalsIgnoreCase("BitSegment (TimeSeg1)")) && (iMinBitSegment > 16)) | sBitSegmentName.equalsIgnoreCase("BitSegment (TimeSeg2)"))) && (iMinBitSegment > 8)) {
 /* 554 */               sErrorSentence = "With this Prescaler value, " + this.m_clRccService.getClockName(this.m_clIpInstanceName) + " Clock Frequency (" + valueHelpString((int)dIpClockFrequency, "Hz") + "), and this " + sBitSegmentName + " length (" + iBitSegment + " Tq), Nominal Bit Time is too short (" + iTimeBit + "nS).\nThe " + sBitSegmentName + " must be more than " + iMinBitSegment + ".\nPlease set Prescaler more than " + valueHelpString(iPrescaler, "");
 /*     */             }
 /*     */             else
@@ -274,18 +297,18 @@
 /* 576 */             clUpdateParam = new ArrayList();
 /* 577 */             clUpdateParam.add(clSourceParameter);
 /*     */           } else {
-/* 579 */             Parameter ParameterBS1 = getParameter("BS1");
-/* 580 */             Parameter ParameterBS2 = getParameter("BS2");
+/* 579 */             Parameter ParameterTimeSeg1 = getParameter("TimeSeg1");
+/* 580 */             Parameter ParameterTimeSeg2 = getParameter("TimeSeg2");
 /* 581 */             if (clUpdateParam == null) {
 /* 582 */               clUpdateParam = new ArrayList();
 /*     */             }
-/* 584 */             this.m_clParamInvalidNameList.remove("BS1");
-/* 585 */             this.m_clParamInvalidNameList.remove("BS2");
-/* 586 */             ParameterBS1.setValid(Boolean.valueOf(true));
-/* 587 */             ParameterBS2.setValid(Boolean.valueOf(true));
+/* 584 */             this.m_clParamInvalidNameList.remove("TimeSeg1");
+/* 585 */             this.m_clParamInvalidNameList.remove("TimeSeg2");
+/* 586 */             ParameterTimeSeg1.setValid(Boolean.valueOf(true));
+/* 587 */             ParameterTimeSeg2.setValid(Boolean.valueOf(true));
 /*     */ 
-/* 589 */             clUpdateParam.add(ParameterBS1);
-/* 590 */             clUpdateParam.add(ParameterBS2);
+/* 589 */             clUpdateParam.add(ParameterTimeSeg1);
+/* 590 */             clUpdateParam.add(ParameterTimeSeg2);
 /*     */           }
 /*     */ 
 /* 594 */           clParameter = getParameter("CalculateTimeBit");
@@ -295,7 +318,6 @@
 /* 598 */           if (clParameter != null) {
 /* 599 */             TimeBitTmp = iTimeQuantum * iBitNbQuantum;
 /* 600 */             iTimeBit = (int)TimeBitTmp;
-/*     */             String sValue;
 /*     */             String sValue;
 /* 601 */             if (!paramRemoveCheck.getHasCheck().booleanValue())
 /*     */             {
