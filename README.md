@@ -1,9 +1,10 @@
-# STM32CubeFX Unofficial Bugfix/Patching
+# STM32CubeMX Unofficial Bugfix/Patching
 
-As nice as STM32CubeFX can be for generating and updating STM32X projects
+As nice as STM32CubeMX can be for generating and updating STM32X projects
 it has a number of bugs. I got annoyed enough to fix one.
 
 This repository was created primarily so I could send ST a bug report.
+As well, to help anybody who encounters an issue in the mean time.
 
 ## CAN
 
